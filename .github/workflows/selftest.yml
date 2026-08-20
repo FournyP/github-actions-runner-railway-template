@@ -1,0 +1,36 @@
+# Dispatch this manually to confirm the Railway runner is picking up jobs.
+# It is deliberately workflow_dispatch-only: an `on: push` workflow would queue
+# forever on any clone that has no self-hosted runner attached.
+name: Runner self-test
+
+on:
+  workflow_dispatch:
+    inputs:
+      runs_on:
+        description: Label to target
+        required: false
+        default: self-hosted
+
+jobs:
+  selftest:
+    runs-on: ${{ github.event.inputs.runs_on || 'self-hosted' }}
+    steps:
+      - name: Report the machine that picked up this job
+        run: |
+          echo "runner name  : $RUNNER_NAME"
+          echo "runner os    : $RUNNER_OS / $RUNNER_ARCH"
+          echo "hostname     : $(hostname)"
+          echo "kernel       : $(uname -sr)"
+          echo "cpus (cgroup): $(cat /sys/fs/cgroup/cpu.max 2>/dev/null || echo n/a)"
+          echo "mem  (cgroup): $(cat /sys/fs/cgroup/memory.max 2>/dev/null || echo n/a)"
+
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Run a real build step
+        run: |
+          set -e
+          git --version
+          jq --version
+          curl --version | head -n1
+          echo '{"deployed_on":"railway"}' | jq -e '.deployed_on == "railway"'

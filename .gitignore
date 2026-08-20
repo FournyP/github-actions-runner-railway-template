@@ -1,0 +1,6 @@
+_work/
+_diag/
+.runner
+.credentials
+.credentials_rsaparams
+.health/
