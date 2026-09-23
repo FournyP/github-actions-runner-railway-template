@@ -4,6 +4,7 @@
 # runner already installed under /home/runner). We add only what Railway needs:
 #   tini    — the start command is not PID 1, so children need a subreaper
 #   busybox — serves the /healthz file the Railway health check probes
+#   build-essential, libatomic1 — parity with GitHub-hosted runners (cgo builds, Node 26 binaries)
 # Pinned so a rebuild is reproducible; Dependabot bumps it.
 FROM ghcr.io/actions/actions-runner:2.337.0
 
@@ -13,6 +14,8 @@ RUN apt-get update \
       tini \
       busybox-static \
       ca-certificates \
+      build-essential \
+      libatomic1 \
  && rm -rf /var/lib/apt/lists/*
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
