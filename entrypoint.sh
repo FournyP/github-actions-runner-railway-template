@@ -36,11 +36,13 @@ case "$SCOPE" in
   *)     SCOPE_PATH="orgs/${SCOPE}";  SCOPE_KIND="organization" ;;
 esac
 
-# One runner name per replica: Railway injects a distinct RAILWAY_REPLICA_ID into
-# every replica, and two runners may not share a name.
-SUFFIX="${RAILWAY_REPLICA_ID:-$(hostname)}"
-SUFFIX="$(printf '%s' "$SUFFIX" | tr -cd 'a-zA-Z0-9' | cut -c1-8)"
+# One runner name per replica AND per deployment: the replica id can repeat across
+# deployments, and a new container deletes any registration holding its name, which
+# would kill the job a draining container of the previous deployment is still running.
+short_id() { printf '%s' "$1" | tr -cd 'a-zA-Z0-9' | cut -c1-8; }
+SUFFIX="$(short_id "${RAILWAY_REPLICA_ID:-$(hostname)}")"
 [ -n "$SUFFIX" ] || SUFFIX="0"
+[ -n "${RAILWAY_DEPLOYMENT_ID:-}" ] && SUFFIX="$(short_id "$RAILWAY_DEPLOYMENT_ID")-${SUFFIX}"
 RUNNER_NAME="${RUNNER_NAME:-${RUNNER_NAME_PREFIX:-railway}-${SUFFIX}}"
 
 mkdir -p "$RUNNER_WORK" "$HEALTH_ROOT"
@@ -119,10 +121,21 @@ HEALTH_PID=$!
 SHUTTING_DOWN=0
 RUNNER_PID=""
 
+# The listener cancels its running job on SIGTERM, so hold the signal back until the
+# job's Runner.Worker exits; Railway's draining window bounds the wait.
 on_term() {
+  [ "$SHUTTING_DOWN" -eq 1 ] && return 0
   SHUTTING_DOWN=1
-  log "shutdown signal received; letting the runner finish its current job"
-  [ -n "$RUNNER_PID" ] && kill -TERM "$RUNNER_PID" 2>/dev/null
+  [ -n "$RUNNER_PID" ] || return 0
+  if pgrep -f Runner.Worker >/dev/null; then
+    log "shutdown signal received; letting the runner finish its current job"
+  else
+    log "shutdown signal received; runner idle, stopping"
+  fi
+  (
+    while pgrep -f Runner.Worker >/dev/null; do sleep 5; done
+    kill -TERM "$RUNNER_PID" 2>/dev/null
+  ) &
   return 0
 }
 trap on_term TERM INT

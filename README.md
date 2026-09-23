@@ -17,7 +17,7 @@ every job gets a fresh just-in-time registration derived from it.
 | `GITHUB_PAT` | yes | — | Personal access token. `repo` scope for a repository runner, `admin:org` for an organization runner. Fine-grained tokens need **Administration: read & write** (repository) or **Self-hosted runners: read & write** (organization). |
 | `GITHUB_SCOPE` | yes | — | `owner/repository` for a repository runner, or `owner` for an organization runner. A pasted `https://github.com/owner/repo` URL is accepted too. |
 | `RUNNER_LABELS` | no | `self-hosted,linux,x64,railway` | Labels your workflows target with `runs-on`. |
-| `RUNNER_NAME_PREFIX` | no | `railway` | Runner names are `<prefix>-<replica id>`, so replicas never collide. |
+| `RUNNER_NAME_PREFIX` | no | `railway` | Runner names are `<prefix>-<deployment id>-<replica id>`, so replicas and overlapping deployments never collide. |
 | `RUNNER_NAME` | no | derived | Pin the full name instead of deriving it. Leave unset when running more than one replica. |
 | `RUNNER_EPHEMERAL` | no | `true` | `true` re-registers before every job. `false` keeps one long-lived registration. |
 | `RUNNER_GROUP_ID` | no | `1` | Runner group for just-in-time registration. `1` is `Default`. |
@@ -45,7 +45,8 @@ CI traffic and take the service down after ten builds.
 sitting green over a runner that never picks up work.
 
 **Draining.** On redeploy the runner is asked to finish its current job before
-exiting. Give the service room to do that:
+exiting: the stop signal is held back until the job ends, since the runner would
+otherwise cancel it. Give the service room to do that:
 `RAILWAY_DEPLOYMENT_DRAINING_SECONDS=900`. The default is `0`, which kills a
 running build immediately.
 
