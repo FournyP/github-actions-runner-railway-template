@@ -4,7 +4,8 @@ Runs [GitHub's official Actions runner](https://github.com/actions/runner) as a
 Railway service, so your workflows execute on compute you control instead of
 GitHub-hosted minutes.
 
-The image is `ghcr.io/actions/actions-runner:latest` — GitHub's own build — plus a
+The image is `ghcr.io/actions/actions-runner` — GitHub's own build, pinned to a
+release and bumped by Dependabot — plus a
 boot script that mints the runner's registration itself. There is no registration
 token to paste and nothing expires: you supply a personal access token once, and
 every job gets a fresh just-in-time registration derived from it.
@@ -30,6 +31,10 @@ every job gets a fresh just-in-time registration derived from it.
 listener takes exactly that job, and the workspace is wiped before the next
 registration. GitHub recommends this for self-hosted runners because no state
 carries between jobs.
+
+The tool cache (`RUNNER_TOOL_CACHE=/home/runner/_tool`) sits outside the workspace,
+so toolchains fetched by `actions/setup-go`, `setup-node` or `setup-python` survive
+the wipe and are reused until the container restarts.
 
 The re-registration happens *inside* the container rather than by restarting it.
 Recycling the container per job would spend Railway's restart budget on ordinary

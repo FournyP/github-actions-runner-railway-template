@@ -4,7 +4,8 @@
 # runner already installed under /home/runner). We add only what Railway needs:
 #   tini    — the start command is not PID 1, so children need a subreaper
 #   busybox — serves the /healthz file the Railway health check probes
-FROM ghcr.io/actions/actions-runner:latest
+# Pinned so a rebuild is reproducible; Dependabot bumps it.
+FROM ghcr.io/actions/actions-runner:2.337.0
 
 USER root
 RUN apt-get update \
@@ -19,6 +20,10 @@ RUN chmod 0755 /usr/local/bin/entrypoint.sh
 
 USER runner
 WORKDIR /home/runner
+
+# Outside RUNNER_WORK, so the per-job workspace wipe keeps setup-* downloads for the next job.
+ENV RUNNER_TOOL_CACHE=/home/runner/_tool
+RUN mkdir -p "$RUNNER_TOOL_CACHE"
 
 # Railway overrides this, but keep the image runnable on its own.
 ENTRYPOINT ["/usr/bin/tini", "-s", "--"]
