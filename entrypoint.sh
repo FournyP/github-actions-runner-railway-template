@@ -122,7 +122,8 @@ SHUTTING_DOWN=0
 RUNNER_PID=""
 
 # The listener cancels its running job on SIGTERM, so hold the signal back until the
-# job's Runner.Worker exits; Railway's draining window bounds the wait.
+# job's Runner.Worker exits; Railway's draining window bounds the wait. Signal the
+# listener itself: run.sh relays TERM as SIGINT, which a background job ignores.
 on_term() {
   [ "$SHUTTING_DOWN" -eq 1 ] && return 0
   SHUTTING_DOWN=1
@@ -134,7 +135,7 @@ on_term() {
   fi
   (
     while pgrep -f Runner.Worker >/dev/null; do sleep 5; done
-    kill -TERM "$RUNNER_PID" 2>/dev/null
+    pkill -TERM -f Runner.Listener
   ) &
   return 0
 }
