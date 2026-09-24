@@ -5,7 +5,7 @@
 #   tini    — the start command is not PID 1, so children need a subreaper
 #   busybox — serves the /healthz file the Railway health check probes
 #   build-essential, libatomic1 — parity with GitHub-hosted runners (cgo builds, Node 26 binaries)
-# Pinned so a rebuild is reproducible; Dependabot bumps it.
+# Pinned so a rebuild is reproducible; Renovate bumps it.
 FROM ghcr.io/actions/actions-runner:2.337.0
 
 USER root

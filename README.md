@@ -5,7 +5,7 @@ Railway service, so your workflows execute on compute you control instead of
 GitHub-hosted minutes.
 
 The image is `ghcr.io/actions/actions-runner` — GitHub's own build, pinned to a
-release and bumped by Dependabot — plus a
+release and bumped by Renovate — plus a
 boot script that mints the runner's registration itself. There is no registration
 token to paste and nothing expires: you supply a personal access token once, and
 every job gets a fresh just-in-time registration derived from it.
