@@ -25,7 +25,7 @@ jobs:
           echo "mem  (cgroup): $(cat /sys/fs/cgroup/memory.max 2>/dev/null || echo n/a)"
 
       - name: Check out the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Run a real build step
         run: |
