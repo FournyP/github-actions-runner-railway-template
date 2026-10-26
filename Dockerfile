@@ -6,7 +6,7 @@
 #   busybox — serves the /healthz file the Railway health check probes
 #   build-essential, libatomic1 — parity with GitHub-hosted runners (cgo builds, Node 26 binaries)
 # Pinned so a rebuild is reproducible; Renovate bumps it.
-FROM ghcr.io/actions/actions-runner:2.337.0
+FROM ghcr.io/actions/actions-runner:2.338.2
 
 USER root
 RUN apt-get update \
